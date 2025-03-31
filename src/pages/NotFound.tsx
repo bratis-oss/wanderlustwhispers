@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import MainLayout from "@/components/layout/MainLayout";
+import { Link } from "react-router-dom";
 
 const NotFound = () => {
   const location = useLocation();
@@ -24,9 +25,11 @@ const NotFound = () => {
           <p className="text-xl text-muted-foreground mb-8 max-w-md mx-auto">
             Parece que te has perdido en el camino. Esta ruta no existe en nuestro mapa de viajes.
           </p>
-          <Button href="/" size="lg" className="bg-primary hover:bg-primary/90">
-            Volver a Inicio
-          </Button>
+          <Link to="/">
+            <Button size="lg" className="bg-primary hover:bg-primary/90">
+              Volver a Inicio
+            </Button>
+          </Link>
         </div>
       </div>
     </MainLayout>
