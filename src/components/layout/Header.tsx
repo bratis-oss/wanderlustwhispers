@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Sun, Moon, Search, Menu, X } from 'lucide-react';
+import { useLanguage, Language, getLanguageLabel } from '@/contexts/LanguageContext';
 
 const languages = [
   { code: 'es', name: 'Español' },
@@ -20,21 +21,23 @@ const languages = [
   { code: 'fr', name: 'Français' }
 ];
 
-const navItems = [
-  { path: '/', label: 'Inicio' },
-  { path: '/destinos', label: 'Destinos' },
-  { path: '/escapadas', label: 'Escapadas' },
-  { path: '/consejos-de-viaje', label: 'Consejos de viaje' },
-  { path: '/vida-nomada', label: 'Vida nómada' },
-  { path: '/sobre-nomadgo', label: 'Sobre NomadGo' }
-];
-
 const Header = () => {
   const [isDark, setIsDark] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [language, setLanguage] = useState('es');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const { language, setLanguage, t } = useLanguage();
+  const navigate = useNavigate();
+
+  const navItems = [
+    { path: '/', label: t('nav.home') },
+    { path: '/destinos', label: t('nav.destinations') },
+    { path: '/escapadas', label: t('nav.getaways') },
+    { path: '/consejos-de-viaje', label: t('nav.travelTips') },
+    { path: '/vida-nomada', label: t('nav.nomadLife') },
+    { path: '/sobre-nomadgo', label: t('nav.about') }
+  ];
 
   useEffect(() => {
     if (localStorage.theme === 'dark' || 
@@ -70,9 +73,23 @@ const Header = () => {
     }
   };
 
-  const changeLanguage = (lang: string) => {
+  const changeLanguage = (lang: Language) => {
     setLanguage(lang);
-    // In a real implementation, this would activate language change logic
+    // En una implementación real, aquí se podría guardar la preferencia en localStorage
+    localStorage.setItem('preferredLanguage', lang);
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      console.log(`Buscando: ${searchTerm}`);
+      // En una implementación real, aquí redirigirías a la página de resultados
+      // navigate(`/buscar?q=${encodeURIComponent(searchTerm)}`);
+      
+      // Por ahora solo cerramos el buscador después de buscar
+      setSearchOpen(false);
+      setSearchTerm('');
+    }
   };
 
   return (
@@ -115,16 +132,23 @@ const Header = () => {
           {/* Search */}
           <div className="relative">
             {searchOpen ? (
-              <div className="flex items-center">
+              <form onSubmit={handleSearch} className="flex items-center">
                 <Input 
                   type="text" 
-                  placeholder="Buscar..." 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder={t('search.placeholder')}
                   className="w-48 pr-8"
                   autoFocus
-                  onBlur={() => setSearchOpen(false)}
+                  onBlur={() => !searchTerm && setSearchOpen(false)}
                 />
-                <Search className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
-              </div>
+                <button 
+                  type="submit" 
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                >
+                  <Search size={18} />
+                </button>
+              </form>
             ) : (
               <Button 
                 variant="ghost" 
@@ -147,7 +171,7 @@ const Header = () => {
               {languages.map((lang) => (
                 <DropdownMenuItem 
                   key={lang.code}
-                  onClick={() => changeLanguage(lang.code)}
+                  onClick={() => changeLanguage(lang.code as Language)}
                   className={language === lang.code ? "bg-secondary" : ""}
                 >
                   {lang.name}
@@ -161,6 +185,7 @@ const Header = () => {
             variant="ghost" 
             size="icon"
             onClick={toggleDarkMode}
+            title={isDark ? t('lightMode') : t('darkMode')}
           >
             {isDark ? <Sun size={20} /> : <Moon size={20} />}
           </Button>
@@ -186,28 +211,35 @@ const Header = () => {
               </nav>
 
               <div className="flex flex-col space-y-4">
-                <div className="relative">
+                <form onSubmit={handleSearch} className="relative">
                   <Input 
-                    type="text" 
-                    placeholder="Buscar..." 
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder={t('search.placeholder')}
                     className="w-full pr-8"
                   />
-                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
-                </div>
+                  <button 
+                    type="submit"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                  >
+                    <Search size={18} />
+                  </button>
+                </form>
 
                 <div className="flex justify-between">
                   {/* Language Selector */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm">
-                        {language.toUpperCase()}
+                        {getLanguageLabel(language)}
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
                       {languages.map((lang) => (
                         <DropdownMenuItem 
                           key={lang.code}
-                          onClick={() => changeLanguage(lang.code)}
+                          onClick={() => changeLanguage(lang.code as Language)}
                           className={language === lang.code ? "bg-secondary" : ""}
                         >
                           {lang.name}
@@ -223,7 +255,7 @@ const Header = () => {
                     onClick={toggleDarkMode}
                   >
                     {isDark ? <Sun size={16} className="mr-2" /> : <Moon size={16} className="mr-2" />}
-                    {isDark ? "Modo Claro" : "Modo Oscuro"}
+                    {isDark ? t('lightMode') : t('darkMode')}
                   </Button>
                 </div>
               </div>
